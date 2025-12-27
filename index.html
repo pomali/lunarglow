@@ -221,6 +221,12 @@
         let touchStartX = null;
         let touchStartTime = null;
 
+        // Gesture detection constants
+        const SWIPE_ZONE_HEIGHT = 50;      // Height from bottom edge for swipe detection (px)
+        const SWIPE_MIN_DISTANCE = 50;     // Minimum vertical distance for swipe (px)
+        const SWIPE_MAX_HORIZONTAL = 50;   // Maximum horizontal movement for swipe (px)
+        const SWIPE_MAX_DURATION = 500;    // Maximum time for swipe gesture (ms)
+
         const lightScreen = document.getElementById('light-screen');
         const controls = document.getElementById('controls');
         const tapHint = document.getElementById('tap-hint');
@@ -337,8 +343,8 @@
             const touch = e.touches[0];
             const screenHeight = window.innerHeight;
             
-            // Consider bottom 50px as the swipe zone to avoid Android gestures
-            if (touch.clientY > screenHeight - 50) {
+            // Consider bottom area as the swipe zone to avoid Android gestures
+            if (touch.clientY > screenHeight - SWIPE_ZONE_HEIGHT) {
                 touchStartY = touch.clientY;
                 touchStartX = touch.clientX;
                 touchStartTime = Date.now();
@@ -356,8 +362,10 @@
                 const deltaX = Math.abs(touch.clientX - touchStartX);
                 const deltaTime = Date.now() - touchStartTime;
                 
-                // Swipe up gesture: moved up at least 50px, mostly vertical, within 500ms
-                if (deltaY > 50 && deltaX < 50 && deltaTime < 500) {
+                // Swipe up gesture: check distance, direction, and timing
+                if (deltaY > SWIPE_MIN_DISTANCE && 
+                    deltaX < SWIPE_MAX_HORIZONTAL && 
+                    deltaTime < SWIPE_MAX_DURATION) {
                     toggleControls();
                 }
                 
