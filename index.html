@@ -194,9 +194,12 @@
         let hideTimeout = null;
         let longPressTimer = null;
         let touchMoved = false;
+        let touchStartX = 0;
+        let touchStartY = 0;
 
-        // Long press detection constant
+        // Long press detection constants
         const LONG_PRESS_DURATION = 2000;  // Duration for long press (ms)
+        const MOVEMENT_THRESHOLD = 10;      // Maximum movement in pixels before canceling long press
 
         const lightScreen = document.getElementById('light-screen');
         const controls = document.getElementById('controls');
@@ -305,7 +308,14 @@
                 return;
             }
 
+            // Clear any existing timer to prevent multiple simultaneous timers
+            clearTimeout(longPressTimer);
             touchMoved = false;
+            
+            // Store initial touch position
+            const touch = e.touches[0];
+            touchStartX = touch.clientX;
+            touchStartY = touch.clientY;
             
             // Start long press timer
             longPressTimer = setTimeout(() => {
@@ -316,9 +326,18 @@
         }, { passive: true });
 
         lightScreen.addEventListener('touchmove', (e) => {
-            // If finger moves significantly, cancel long press
-            touchMoved = true;
-            clearTimeout(longPressTimer);
+            // Check if finger has moved beyond the threshold
+            if (!touchMoved && longPressTimer) {
+                const touch = e.touches[0];
+                const deltaX = Math.abs(touch.clientX - touchStartX);
+                const deltaY = Math.abs(touch.clientY - touchStartY);
+                
+                // Cancel long press if movement exceeds threshold
+                if (deltaX > MOVEMENT_THRESHOLD || deltaY > MOVEMENT_THRESHOLD) {
+                    touchMoved = true;
+                    clearTimeout(longPressTimer);
+                }
+            }
             
             // Prevent accidental scrolling on the light screen only
             if (!controls.contains(e.target)) {
