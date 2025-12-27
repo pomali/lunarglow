@@ -120,6 +120,10 @@
             text-align: center;
             pointer-events: none;
             animation: fadeInOut 3s ease-in-out infinite;
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
         }
 
         @keyframes fadeInOut {
@@ -127,10 +131,84 @@
             50% { opacity: 0.6; }
         }
 
+        /* Onboarding screen */
+        #onboarding {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.9);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            pointer-events: none;
+        }
+
+        #onboarding.visible {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        #onboarding-content {
+            max-width: 80%;
+            text-align: center;
+            color: white;
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+        }
+
+        #onboarding-content h1 {
+            font-size: 32px;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+
+        #onboarding-content p {
+            font-size: 18px;
+            line-height: 1.6;
+            margin-bottom: 15px;
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        #onboarding-content .emoji {
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+
+        #onboarding-dismiss {
+            margin-top: 30px;
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.5);
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 0.8; }
+        }
+
 
     </style>
 </head>
 <body>
+    <!-- Onboarding screen -->
+    <div id="onboarding">
+        <div id="onboarding-content">
+            <div class="emoji">🌙</div>
+            <h1>Welcome to LunarGlow</h1>
+            <p>Transform your phone into a soft, warm light for reading at night.</p>
+            <p><strong>Long press and hold</strong> (2 seconds) anywhere on the screen to show controls.</p>
+            <div id="onboarding-dismiss">Tap anywhere to start or wait 4 seconds...</div>
+        </div>
+    </div>
+
     <div id="light-screen">
         <div id="tap-hint">Long press (hold for 2 seconds) to show controls</div>
         <div id="controls">
@@ -207,6 +285,43 @@
         const tempBtns = document.querySelectorAll('.temp-btn');
         const fullscreenBtn = document.getElementById('fullscreen-btn');
         const statusDiv = document.getElementById('status');
+        const onboarding = document.getElementById('onboarding');
+
+        // Onboarding management
+        const ONBOARDING_KEY = 'lunarglow-onboarding-seen';
+        const ONBOARDING_DURATION = 4000; // 4 seconds
+
+        function hasSeenOnboarding() {
+            return localStorage.getItem(ONBOARDING_KEY) === 'true';
+        }
+
+        function markOnboardingSeen() {
+            localStorage.setItem(ONBOARDING_KEY, 'true');
+        }
+
+        function showOnboarding() {
+            onboarding.classList.add('visible');
+            
+            // Auto-dismiss after 4 seconds
+            setTimeout(() => {
+                hideOnboarding();
+            }, ONBOARDING_DURATION);
+        }
+
+        function hideOnboarding() {
+            onboarding.classList.remove('visible');
+            markOnboardingSeen();
+        }
+
+        // Dismiss onboarding on tap
+        onboarding.addEventListener('click', () => {
+            hideOnboarding();
+        });
+
+        // Show onboarding if first visit
+        if (!hasSeenOnboarding()) {
+            showOnboarding();
+        }
 
         // Set initial color
         function setColorTemp(kelvin) {
