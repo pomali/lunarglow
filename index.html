@@ -308,6 +308,11 @@
                 return;
             }
 
+            // Ensure we have at least one touch
+            if (e.touches.length === 0) {
+                return;
+            }
+
             // Clear any existing timer to prevent multiple simultaneous timers
             clearTimeout(longPressTimer);
             touchMoved = false;
