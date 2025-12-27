@@ -127,37 +127,12 @@
             50% { opacity: 0.6; }
         }
 
-        /* Top tap zone indicator */
-        #top-tap-zone {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 15vh;
-            cursor: pointer;
-            z-index: 10;
-        }
 
-        /* Bottom swipe zone (visual indicator when controls hidden) */
-        #bottom-swipe-indicator {
-            position: absolute;
-            bottom: 0;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 60px;
-            height: 4px;
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 2px 2px 0 0;
-            pointer-events: none;
-            animation: fadeInOut 3s ease-in-out infinite;
-        }
     </style>
 </head>
 <body>
     <div id="light-screen">
-        <div id="top-tap-zone"></div>
-        <div id="tap-hint">Tap top or swipe up from bottom to show controls</div>
-        <div id="bottom-swipe-indicator"></div>
+        <div id="tap-hint">Long press (hold for 2 seconds) to show controls</div>
         <div id="controls">
             <div id="color-temps">
                 <button class="temp-btn" data-temp="2000">Candle<br>2000K</button>
@@ -170,7 +145,7 @@
             <div id="action-btns">
                 <button class="action-btn" id="fullscreen-btn">Fullscreen</button>
             </div>
-            <div id="status">Tap top or swipe up from bottom to hide</div>
+            <div id="status">Long press to hide</div>
         </div>
     </div>
 
@@ -217,21 +192,18 @@
         let wakeLock = null;
         let controlsVisible = false;
         let hideTimeout = null;
-        let touchStartY = null;
-        let touchStartX = null;
-        let touchStartTime = null;
+        let longPressTimer = null;
+        let touchMoved = false;
+        let touchStartX = 0;
+        let touchStartY = 0;
 
-        // Gesture detection constants
-        const SWIPE_ZONE_HEIGHT = 50;      // Height from bottom edge for swipe detection (px)
-        const SWIPE_MIN_DISTANCE = 50;     // Minimum vertical distance for swipe (px)
-        const SWIPE_MAX_HORIZONTAL = 50;   // Maximum horizontal movement for swipe (px)
-        const SWIPE_MAX_DURATION = 500;    // Maximum time for swipe gesture (ms)
+        // Long press detection constants
+        const LONG_PRESS_DURATION = 2000;  // Duration for long press (ms)
+        const MOVEMENT_THRESHOLD = 10;      // Maximum movement in pixels before canceling long press
 
         const lightScreen = document.getElementById('light-screen');
         const controls = document.getElementById('controls');
         const tapHint = document.getElementById('tap-hint');
-        const bottomSwipeIndicator = document.getElementById('bottom-swipe-indicator');
-        const topTapZone = document.getElementById('top-tap-zone');
         const tempBtns = document.querySelectorAll('.temp-btn');
         const fullscreenBtn = document.getElementById('fullscreen-btn');
         const statusDiv = document.getElementById('status');
@@ -255,7 +227,6 @@
             controlsVisible = true;
             controls.classList.add('visible');
             tapHint.style.display = 'none';
-            bottomSwipeIndicator.style.display = 'none';
 
             // Auto-hide controls after 5 seconds
             clearTimeout(hideTimeout);
@@ -268,7 +239,6 @@
             controlsVisible = false;
             controls.classList.remove('visible');
             tapHint.style.display = 'block';
-            bottomSwipeIndicator.style.display = 'block';
             clearTimeout(hideTimeout);
         }
 
@@ -285,16 +255,16 @@
             try {
                 if ('wakeLock' in navigator) {
                     wakeLock = await navigator.wakeLock.request('screen');
-                    statusDiv.textContent = 'Screen will stay awake • Tap top or swipe to hide';
+                    statusDiv.textContent = 'Screen will stay awake • Long press to hide';
                     
                     wakeLock.addEventListener('release', () => {
-                        statusDiv.textContent = 'Wake lock released • Tap top or swipe to hide';
+                        statusDiv.textContent = 'Wake lock released • Long press to hide';
                     });
                 } else {
-                    statusDiv.textContent = 'Wake Lock not supported • Tap top or swipe to hide';
+                    statusDiv.textContent = 'Wake Lock not supported • Long press to hide';
                 }
             } catch (err) {
-                statusDiv.textContent = 'Unable to keep screen awake • Tap top or swipe to hide';
+                statusDiv.textContent = 'Unable to keep screen awake • Long press to hide';
             }
         }
 
@@ -309,7 +279,7 @@
         function toggleFullscreen() {
             if (!document.fullscreenElement) {
                 document.documentElement.requestFullscreen().catch(err => {
-                    statusDiv.textContent = 'Unable to enter fullscreen mode • Tap top or swipe to hide';
+                    statusDiv.textContent = 'Unable to enter fullscreen mode • Long press to hide';
                 });
             } else {
                 if (document.exitFullscreen) {
@@ -331,56 +301,64 @@
             toggleFullscreen();
         });
 
-        // Top tap zone - tap to toggle controls
-        topTapZone.addEventListener('click', (e) => {
-            e.stopPropagation();
-            toggleControls();
-        });
-
-        // Bottom swipe detection - swipe up from bottom edge to show controls
+        // Long press detection - hold for 2+ seconds to toggle controls
         lightScreen.addEventListener('touchstart', (e) => {
-            // Only track touches that start near the bottom of the screen
-            const touch = e.touches[0];
-            const screenHeight = window.innerHeight;
-            
-            // Consider bottom area as the swipe zone to avoid Android gestures
-            if (touch.clientY > screenHeight - SWIPE_ZONE_HEIGHT) {
-                touchStartY = touch.clientY;
-                touchStartX = touch.clientX;
-                touchStartTime = Date.now();
-            } else {
-                touchStartY = null;
-                touchStartX = null;
-                touchStartTime = null;
+            // Don't trigger long press if touching controls
+            if (controls.contains(e.target)) {
+                return;
             }
-        }, { passive: true });
 
-        lightScreen.addEventListener('touchend', (e) => {
-            if (touchStartY !== null) {
-                const touch = e.changedTouches[0];
-                const deltaY = touchStartY - touch.clientY;
-                const deltaX = Math.abs(touch.clientX - touchStartX);
-                const deltaTime = Date.now() - touchStartTime;
-                
-                // Swipe up gesture: check distance, direction, and timing
-                if (deltaY > SWIPE_MIN_DISTANCE && 
-                    deltaX < SWIPE_MAX_HORIZONTAL && 
-                    deltaTime < SWIPE_MAX_DURATION) {
+            // Ensure we have at least one touch
+            if (e.touches.length === 0) {
+                return;
+            }
+
+            // Clear any existing timer to prevent multiple simultaneous timers
+            clearTimeout(longPressTimer);
+            touchMoved = false;
+            
+            // Store initial touch position
+            const touch = e.touches[0];
+            touchStartX = touch.clientX;
+            touchStartY = touch.clientY;
+            
+            // Start long press timer
+            longPressTimer = setTimeout(() => {
+                if (!touchMoved) {
                     toggleControls();
                 }
-                
-                touchStartY = null;
-                touchStartX = null;
-                touchStartTime = null;
-            }
+            }, LONG_PRESS_DURATION);
         }, { passive: true });
 
-        // Prevent accidental scrolling on the light screen only
         lightScreen.addEventListener('touchmove', (e) => {
+            // Check if finger has moved beyond the threshold
+            if (!touchMoved && longPressTimer && e.touches.length > 0) {
+                const touch = e.touches[0];
+                const deltaX = Math.abs(touch.clientX - touchStartX);
+                const deltaY = Math.abs(touch.clientY - touchStartY);
+                
+                // Cancel long press if movement exceeds threshold
+                if (deltaX > MOVEMENT_THRESHOLD || deltaY > MOVEMENT_THRESHOLD) {
+                    touchMoved = true;
+                    clearTimeout(longPressTimer);
+                }
+            }
+            
+            // Prevent accidental scrolling on the light screen only
             if (!controls.contains(e.target)) {
                 e.preventDefault();
             }
         }, { passive: false });
+
+        lightScreen.addEventListener('touchend', (e) => {
+            // Clear long press timer if touch ends before 2 seconds
+            clearTimeout(longPressTimer);
+        }, { passive: true });
+
+        lightScreen.addEventListener('touchcancel', (e) => {
+            // Clear long press timer if touch is cancelled
+            clearTimeout(longPressTimer);
+        }, { passive: true });
 
         // Initialize
         setColorTemp(3000); // Default to 3000K (Soft White)
