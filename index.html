@@ -327,7 +327,7 @@
 
         lightScreen.addEventListener('touchmove', (e) => {
             // Check if finger has moved beyond the threshold
-            if (!touchMoved && longPressTimer) {
+            if (!touchMoved && longPressTimer && e.touches.length > 0) {
                 const touch = e.touches[0];
                 const deltaX = Math.abs(touch.clientX - touchStartX);
                 const deltaY = Math.abs(touch.clientY - touchStartY);
