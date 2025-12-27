@@ -1,0 +1,88 @@
+<svg width="1200" height="630" xmlns="http://www.w3.org/2000/svg">
+  <!-- Gradient background: warm, soft glow from dark to warm orange -->
+  <defs>
+    <radialGradient id="bg-gradient" cx="50%" cy="40%">
+      <stop offset="0%" style="stop-color:#FFB86C;stop-opacity:0.4" />
+      <stop offset="50%" style="stop-color:#FF9F5A;stop-opacity:0.2" />
+      <stop offset="100%" style="stop-color:#1a1a2e;stop-opacity:1" />
+    </radialGradient>
+    
+    <!-- Glow effect for the moon -->
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="15" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    
+    <!-- Text shadow -->
+    <filter id="textGlow">
+      <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="1200" height="630" fill="url(#bg-gradient)"/>
+  
+  <!-- Stars -->
+  <circle cx="150" cy="100" r="2" fill="#fff" opacity="0.6"/>
+  <circle cx="250" cy="150" r="1.5" fill="#fff" opacity="0.5"/>
+  <circle cx="950" cy="120" r="2" fill="#fff" opacity="0.7"/>
+  <circle cx="1050" cy="180" r="1.5" fill="#fff" opacity="0.5"/>
+  <circle cx="200" cy="500" r="1.5" fill="#fff" opacity="0.6"/>
+  <circle cx="1100" cy="480" r="2" fill="#fff" opacity="0.5"/>
+  <circle cx="850" cy="520" r="1.5" fill="#fff" opacity="0.6"/>
+  <circle cx="100" cy="300" r="1.5" fill="#fff" opacity="0.5"/>
+  <circle cx="300" cy="250" r="1.5" fill="#fff" opacity="0.6"/>
+  <circle cx="800" cy="150" r="2" fill="#fff" opacity="0.5"/>
+  
+  <!-- Moon with glow -->
+  <circle cx="600" cy="200" r="90" fill="#FFD7A8" filter="url(#glow)" opacity="0.95"/>
+  
+  <!-- Moon craters for realism -->
+  <circle cx="575" cy="175" r="15" fill="#FFCC99" opacity="0.4"/>
+  <circle cx="625" cy="210" r="22" fill="#FFCC99" opacity="0.3"/>
+  <circle cx="590" cy="225" r="10" fill="#FFCC99" opacity="0.5"/>
+  
+  <!-- Title - Using SVG text with embedded font styling -->
+  <text x="600" y="360" font-family="Arial, Helvetica, sans-serif" font-size="92" font-weight="bold" fill="#FFFFFF" text-anchor="middle" filter="url(#textGlow)">
+    LunarGlow
+  </text>
+  
+  <!-- Subtitle -->
+  <text x="600" y="430" font-family="Arial, Helvetica, sans-serif" font-size="34" font-weight="normal" fill="#FFD7A8" text-anchor="middle">
+    A soft reading light for bedtime stories
+  </text>
+  
+  <!-- Icon elements (book + light rays) -->
+  <g transform="translate(510, 475)">
+    <!-- Simple book -->
+    <rect x="0" y="0" width="45" height="35" rx="3" fill="#FFE5CC" opacity="0.9"/>
+    <line x1="22.5" y1="0" x2="22.5" y2="35" stroke="#FFD7A8" stroke-width="1.5" opacity="0.6"/>
+    <path d="M 0 0 Q 22.5 5 45 0" stroke="#FFD7A8" stroke-width="1" fill="none" opacity="0.5"/>
+  </g>
+  
+  <g transform="translate(660, 475)">
+    <!-- Light rays emanating -->
+    <path d="M 0 17.5 L -6 10 L -4 17.5 L -6 25 Z" fill="#FFD7A8" opacity="0.7"/>
+    <path d="M 0 17.5 L 6 10 L 4 17.5 L 6 25 Z" fill="#FFD7A8" opacity="0.7"/>
+    <path d="M 0 17.5 L -10 5 L -7 17.5 L -10 30 Z" fill="#FFD7A8" opacity="0.5"/>
+    <path d="M 0 17.5 L 10 5 L 7 17.5 L 10 30 Z" fill="#FFD7A8" opacity="0.5"/>
+  </g>
+  
+  <!-- Temperature indicator dots representing the color temps -->
+  <g transform="translate(600, 565)">
+    <circle cx="-90" cy="0" r="6" fill="#FF8C42" opacity="0.8"/>
+    <circle cx="-60" cy="0" r="6" fill="#FFA05C" opacity="0.8"/>
+    <circle cx="-30" cy="0" r="6" fill="#FFB86C" opacity="1"/>
+    <circle cx="0" cy="0" r="6" fill="#FFC98C" opacity="0.8"/>
+    <circle cx="30" cy="0" r="6" fill="#FFD7A8" opacity="0.8"/>
+    <circle cx="60" cy="0" r="6" fill="#FFE5CC" opacity="0.8"/>
+    <circle cx="90" cy="0" r="6" fill="#FFF0E0" opacity="0.8"/>
+  </g>
+</svg>
