@@ -59,17 +59,20 @@ self.addEventListener('fetch', (event) => {
         
         return fetch(fetchRequest).then((response) => {
           // Check if valid response
-          if (!response || response.status !== 200 || response.type !== 'basic') {
+          if (!response || response.status !== 200) {
             return response;
           }
           
           // Clone the response
           const responseToCache = response.clone();
           
-          // Cache the fetched response for future use
+          // Cache the fetched response for future use (don't await to avoid blocking)
           caches.open(CACHE_NAME)
             .then((cache) => {
               cache.put(event.request, responseToCache);
+            })
+            .catch((error) => {
+              console.log('Error caching response:', error);
             });
           
           return response;
