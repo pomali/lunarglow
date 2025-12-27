@@ -57,26 +57,35 @@ self.addEventListener('fetch', (event) => {
         // Clone the request
         const fetchRequest = event.request.clone();
         
-        return fetch(fetchRequest).then((response) => {
-          // Check if valid response
-          if (!response || response.status !== 200) {
+        return fetch(fetchRequest)
+          .then((response) => {
+            // Check if valid response (allow all 2xx status codes)
+            if (!response || !response.ok) {
+              return response;
+            }
+            
+            // Clone the response
+            const responseToCache = response.clone();
+            
+            // Cache the fetched response for future use (don't await to avoid blocking)
+            caches.open(CACHE_NAME)
+              .then((cache) => {
+                cache.put(event.request, responseToCache);
+              })
+              .catch((error) => {
+                console.log('Error caching response:', error);
+              });
+            
             return response;
-          }
-          
-          // Clone the response
-          const responseToCache = response.clone();
-          
-          // Cache the fetched response for future use (don't await to avoid blocking)
-          caches.open(CACHE_NAME)
-            .then((cache) => {
-              cache.put(event.request, responseToCache);
-            })
-            .catch((error) => {
-              console.log('Error caching response:', error);
+          })
+          .catch((error) => {
+            console.log('Fetch failed:', error);
+            // Return a minimal error response or could return a cached offline page
+            return new Response('Network error', {
+              status: 408,
+              headers: { 'Content-Type': 'text/plain' }
             });
-          
-          return response;
-        });
+          });
       })
   );
 });
