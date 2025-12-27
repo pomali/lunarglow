@@ -251,7 +251,7 @@
 
         // Request wake lock on page load and visibility change
         async function handleVisibilityChange() {
-            if (wakeLock !== null && document.visibilityState === 'visible') {
+            if (document.visibilityState === 'visible') {
                 await requestWakeLock();
             }
         }
@@ -283,14 +283,17 @@
         });
 
         lightScreen.addEventListener('click', (e) => {
-            if (e.target === lightScreen || e.target === tapHint) {
+            // Toggle controls if clicking outside the controls area
+            if (!controls.contains(e.target)) {
                 toggleControls();
             }
         });
 
-        // Prevent accidental scrolling
-        document.addEventListener('touchmove', (e) => {
-            e.preventDefault();
+        // Prevent accidental scrolling on the light screen only
+        lightScreen.addEventListener('touchmove', (e) => {
+            if (!controls.contains(e.target)) {
+                e.preventDefault();
+            }
         }, { passive: false });
 
         // Initialize
