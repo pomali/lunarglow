@@ -290,6 +290,7 @@
         // Onboarding management
         const ONBOARDING_KEY = 'lunarglow-onboarding-seen';
         const ONBOARDING_DURATION = 4000; // 4 seconds
+        let onboardingTimeout = null;
 
         function hasSeenOnboarding() {
             return localStorage.getItem(ONBOARDING_KEY) === 'true';
@@ -303,20 +304,32 @@
             onboarding.classList.add('visible');
             
             // Auto-dismiss after 4 seconds
-            setTimeout(() => {
+            onboardingTimeout = setTimeout(() => {
                 hideOnboarding();
             }, ONBOARDING_DURATION);
         }
 
         function hideOnboarding() {
+            // Clear the auto-dismiss timeout to prevent race condition
+            if (onboardingTimeout) {
+                clearTimeout(onboardingTimeout);
+                onboardingTimeout = null;
+            }
+            
             onboarding.classList.remove('visible');
             markOnboardingSeen();
+            
+            // Remove the click event listener to avoid memory leaks
+            onboarding.removeEventListener('click', onboardingClickHandler);
+        }
+
+        // Define click handler separately so it can be removed later
+        function onboardingClickHandler() {
+            hideOnboarding();
         }
 
         // Dismiss onboarding on tap
-        onboarding.addEventListener('click', () => {
-            hideOnboarding();
-        });
+        onboarding.addEventListener('click', onboardingClickHandler);
 
         // Show onboarding if first visit
         if (!hasSeenOnboarding()) {
