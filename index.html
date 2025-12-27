@@ -324,6 +324,9 @@
         const ONBOARDING_DURATION = 4000; // 4 seconds
         let onboardingTimeout = null;
 
+        // Color temperature persistence
+        const COLOR_TEMP_KEY = 'lunarglow-color-temp';
+
         function hasSeenOnboarding() {
             return localStorage.getItem(ONBOARDING_KEY) === 'true';
         }
@@ -368,6 +371,17 @@
             showOnboarding();
         }
 
+        // Get saved color temperature
+        function getSavedColorTemp() {
+            const saved = localStorage.getItem(COLOR_TEMP_KEY);
+            return saved ? parseInt(saved) : 3000; // Default to 3000K
+        }
+
+        // Save color temperature
+        function saveColorTemp(kelvin) {
+            localStorage.setItem(COLOR_TEMP_KEY, kelvin.toString());
+        }
+
         // Set initial color
         function setColorTemp(kelvin) {
             const color = kelvinToRGB(kelvin);
@@ -380,6 +394,9 @@
                     btn.classList.add('active');
                 }
             });
+            
+            // Save to localStorage
+            saveColorTemp(kelvin);
         }
 
         // Toggle controls visibility
@@ -521,7 +538,7 @@
         }, { passive: true });
 
         // Initialize
-        setColorTemp(3000); // Default to 3000K (Soft White)
+        setColorTemp(getSavedColorTemp()); // Load saved color or default to 3000K
         requestWakeLock();
         document.addEventListener('visibilitychange', handleVisibilityChange);
 
