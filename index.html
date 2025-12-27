@@ -245,7 +245,7 @@
                     statusDiv.textContent = 'Wake Lock not supported • Tap to hide';
                 }
             } catch (err) {
-                statusDiv.textContent = `Wake Lock error: ${err.message}`;
+                statusDiv.textContent = 'Unable to keep screen awake • Tap to hide';
             }
         }
 
@@ -260,7 +260,7 @@
         function toggleFullscreen() {
             if (!document.fullscreenElement) {
                 document.documentElement.requestFullscreen().catch(err => {
-                    statusDiv.textContent = `Fullscreen error: ${err.message}`;
+                    statusDiv.textContent = 'Unable to enter fullscreen mode • Tap to hide';
                 });
             } else {
                 if (document.exitFullscreen) {
